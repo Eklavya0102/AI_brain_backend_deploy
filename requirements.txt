@@ -14,10 +14,9 @@ groq==0.4.2
 google-generativeai==0.3.2
 openai==1.6.1
 
-# ── Embeddings & Vector Search ────────────────
+# ── Embeddings (optional - skipped if install fails) ──
 sentence-transformers==2.2.2
 faiss-cpu>=1.7.4
-numpy>=1.24.0,<2.0.0
 
 # ── File Processing ───────────────────────────
 PyPDF2==3.0.1
@@ -33,5 +32,6 @@ pydantic==2.5.2
 werkzeug==3.0.3
 loguru==0.7.2
 apscheduler==3.10.4
-python-socketio==5.11.0
 httpx>=0.24.0
+numpy>=1.24.0,<2.0.0
+python-socketio==5.11.0
