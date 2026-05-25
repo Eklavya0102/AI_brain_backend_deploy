@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+venv/
+.venv/
+env/
+.env
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Uploads & generated files
+uploads/
+vector_store/
+logs/
+
+# Firebase
+firebase-service-account.json
+
+# OS
+.DS_Store
+Thumbs.db

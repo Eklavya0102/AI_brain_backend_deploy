@@ -1,0 +1,20 @@
+# Vercel-compatible requirements (no heavy ML packages)
+flask==3.0.3
+flask-cors==4.0.0
+flask-jwt-extended==4.6.0
+flask-socketio==5.3.6
+flask-sqlalchemy==3.1.1
+sqlalchemy==2.0.23
+groq==0.4.2
+google-generativeai==0.3.2
+openai==1.6.1
+PyPDF2==3.0.1
+python-docx==1.1.0
+firebase-admin==6.4.0
+python-dotenv==1.0.0
+werkzeug==3.0.3
+loguru==0.7.2
+httpx>=0.24.0
+numpy>=1.24.0,<2.0.0
+# Note: faiss-cpu and sentence-transformers are too large for Vercel
+# Vector search will fall back to keyword search
