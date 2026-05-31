@@ -1,5 +1,5 @@
 """
-TeamPulse — Tasks Routes
+AI Team Brain — Tasks Routes
 Fix 1: Only assignee can mark task status (pending→in_progress→completed)
 Fix 2: Emit socket event for real-time task updates (new_task, task_updated)
 Fix 3: Completed tasks deletable only by team owner

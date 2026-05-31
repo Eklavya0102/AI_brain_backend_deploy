@@ -1,5 +1,5 @@
 """
-TeamPulse - Knowledge Base API Routes
+AI Team Brain - Knowledge Base API Routes
 RAG pipeline: Upload → Extract → Embed → Store → Search
 """
 

@@ -1,5 +1,5 @@
 """
-TeamPulse — Auth Routes
+AI Team Brain — Auth Routes
 Fix 2: Added delete team endpoint for team creator.
 """
 

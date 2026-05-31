@@ -1,5 +1,5 @@
 """
-TeamPulse - File Processing Service
+AI Team Brain - File Processing Service
 =========================================
 Extracts text from PDF, DOCX, TXT, and pasted content.
 """

@@ -1,22 +1,15 @@
 """
-TeamPulse — Flask Application
-Fix: Use gevent for proper WebSocket support on Render/production
-Fix: Eliminates 'write() before start_response' Werkzeug error
+AI Team Brain — Flask Application
+Fix: dotenv loaded at very top before any other imports
+Fix: WebSocket 500 error suppressed (harmless Werkzeug conflict with SocketIO threading mode)
 """
 
 import os
 import sys
 
-# CRITICAL: gevent monkey patch must happen FIRST before any other imports
-try:
-    from gevent import monkey
-    monkey.patch_all()
-    ASYNC_MODE = "gevent"
-except ImportError:
-    ASYNC_MODE = "threading"
-
+# Load .env FIRST before any other imports
 from dotenv import load_dotenv
-# Try multiple paths
+# Try multiple paths in case working directory differs
 for env_path in [".env", "backend/.env", os.path.join(os.path.dirname(__file__), ".env")]:
     if os.path.exists(env_path):
         load_dotenv(env_path, override=True)
@@ -28,7 +21,7 @@ from flask_jwt_extended import JWTManager
 from flask_socketio import SocketIO
 from loguru import logger
 
-# Logging
+# ── Logging ───────────────────────────────────────────────────
 logger.remove()
 logger.add(
     sys.stdout,
@@ -39,18 +32,17 @@ logger.add(
 os.makedirs("logs", exist_ok=True)
 logger.add("logs/app.log", rotation="10 MB", retention="30 days", level="INFO")
 
-# Key check
+# ── Verify key loading ────────────────────────────────────────
 groq_key = os.getenv("GROQ_API_KEY", "")
 if groq_key:
-    logger.info(f"✅ GROQ_API_KEY loaded (starts: {groq_key[:8]}...)")
+    logger.info(f"✅ GROQ_API_KEY loaded (starts with: {groq_key[:8]}...)")
 else:
-    logger.warning("⚠️  GROQ_API_KEY not set — AI features disabled")
+    logger.warning("⚠️  GROQ_API_KEY not found in .env — AI features will be disabled")
 
-logger.info(f"✅ SocketIO async mode: {ASYNC_MODE}")
-
+# ── SocketIO — threading mode ─────────────────────────────────
 socketio = SocketIO(
     cors_allowed_origins="*",
-    async_mode=ASYNC_MODE,
+    async_mode="threading",
     logger=False,
     engineio_logger=False,
     ping_timeout=60,
@@ -63,9 +55,9 @@ def create_app():
     app = Flask(__name__)
 
     app.config.update(
-        SECRET_KEY                     = os.getenv("SECRET_KEY",    "teampulse-dev-secret"),
-        JWT_SECRET_KEY                 = os.getenv("JWT_SECRET_KEY","teampulse-jwt-secret"),
-        SQLALCHEMY_DATABASE_URI        = os.getenv("DATABASE_URL",  "sqlite:///teampulse.db"),
+        SECRET_KEY                     = os.getenv("SECRET_KEY",    "atb-dev-secret-change-in-prod"),
+        JWT_SECRET_KEY                 = os.getenv("JWT_SECRET_KEY","atb-jwt-secret-change-in-prod"),
+        SQLALCHEMY_DATABASE_URI        = os.getenv("DATABASE_URL",  "sqlite:///ai_team_brain.db"),
         SQLALCHEMY_TRACK_MODIFICATIONS = False,
         UPLOAD_FOLDER                  = os.getenv("UPLOAD_FOLDER", "./uploads"),
         MAX_CONTENT_LENGTH             = int(os.getenv("MAX_CONTENT_LENGTH", 16_777_216)),
@@ -116,20 +108,23 @@ def create_app():
     @app.route("/api/health")
     def health():
         from services.ai.vector_service import FAISS_AVAILABLE, ST_AVAILABLE
+        from services.ai.ai_service import check_ai_providers
+        providers = check_ai_providers()
         return {
-            "status":     "healthy",
-            "service":    "TeamPulse",
-            "version":    "1.0.0",
-            "async_mode": ASYNC_MODE,
-            "groq_key":   bool(os.getenv("GROQ_API_KEY")),
-            "features":   {"faiss": FAISS_AVAILABLE, "embeddings": ST_AVAILABLE},
+            "status":   "healthy",
+            "service":  "AI Team Brain",
+            "version":  "1.0.0",
+            "python":   sys.version.split()[0],
+            "ai":       providers,
+            "groq_key": bool(os.getenv("GROQ_API_KEY")),
+            "features": {"faiss": FAISS_AVAILABLE, "embeddings": ST_AVAILABLE},
         }
 
     @app.route("/")
     def root():
-        return {"message": "TeamPulse API — visit /api/health"}
+        return {"message": "AI Team Brain API — visit /api/health"}
 
-    logger.info("🚀 TeamPulse backend ready")
+    logger.info("🚀 AI Team Brain backend ready")
     return app
 
 
@@ -137,7 +132,7 @@ if __name__ == "__main__":
     app   = create_app()
     port  = int(os.getenv("PORT", 5000))
     debug = os.getenv("FLASK_ENV", "development") == "development"
-    logger.info(f"🌐 http://localhost:{port} (mode: {ASYNC_MODE})")
+    logger.info(f"🌐 http://localhost:{port}")
     socketio.run(
         app,
         host="0.0.0.0",

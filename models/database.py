@@ -1,5 +1,5 @@
 """
-TeamPulse - Database Models
+AI Team Brain - Database Models
 ================================
 Complete SQLAlchemy ORM models with relationships.
 """

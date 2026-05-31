@@ -1,10 +1,10 @@
 services:
   - type: web
-    name: teampulse-api
+    name: ai-team-brain-api
     runtime: python
     pythonVersion: "3.11.9"
     buildCommand: "pip install -r requirements.txt"
-    startCommand: "gunicorn --worker-class geventwebsocket.gunicorn.workers.GeventWebSocketWorker -w 1 --bind 0.0.0.0:$PORT --timeout 120 'app:create_app()'"
+    startCommand: "python app.py"
     envVars:
       - key: FLASK_ENV
         value: production

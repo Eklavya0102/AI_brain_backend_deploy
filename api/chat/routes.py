@@ -1,5 +1,5 @@
 """
-TeamPulse — Chat Routes
+AI Team Brain — Chat Routes
 Fix: Delete channel — only team owner/creator can delete.
 Fix: Notifications — emit socket event on creation so frontend gets instant update.
 """

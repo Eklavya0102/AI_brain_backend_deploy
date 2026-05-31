@@ -1,5 +1,5 @@
 """
-TeamPulse — AI Service Layer
+AI Team Brain — AI Service Layer
 Fix: Groq 'proxies' error — use http_client=httpx.Client() explicitly.
 Fix: Correct provider order — Groq first, then OpenAI, then Gemini.
 Fix: Groq key validation is now less strict (strips whitespace only).
