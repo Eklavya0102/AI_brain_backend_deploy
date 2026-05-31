@@ -1,5 +1,5 @@
 """
-AI Team Brain — Socket.IO Events
+TeamPulse — Socket.IO Events
 Fix: join_team_room so task broadcasts reach all team members.
 Fix: join_user_room for personal notifications.
 """

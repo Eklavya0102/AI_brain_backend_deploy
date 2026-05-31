@@ -1,5 +1,5 @@
 """
-AI Team Brain — AI API Routes
+TeamPulse — AI API Routes
 Fix 1: Proper error messages when AI providers fail.
 """
 

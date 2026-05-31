@@ -1,5 +1,5 @@
 """
-AI Team Brain — Auth Middleware
+TeamPulse — Auth Middleware
 =================================
 Firebase token verification + JWT decorators.
 Falls back to dev-mode mock auth when Firebase is not configured.

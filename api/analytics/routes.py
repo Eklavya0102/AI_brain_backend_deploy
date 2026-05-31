@@ -1,5 +1,5 @@
 """
-AI Team Brain - Analytics Routes
+TeamPulse - Analytics Routes
 """
 
 from datetime import datetime, timedelta

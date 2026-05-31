@@ -1,5 +1,5 @@
 """
-AI Team Brain - Vector Embedding Service
+TeamPulse - Vector Embedding Service
 =========================================
 Semantic search using sentence-transformers + FAISS.
 Degrades gracefully if faiss-cpu is not installed.
