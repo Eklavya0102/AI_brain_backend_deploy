@@ -15,8 +15,8 @@ google-generativeai==0.3.2
 openai==1.6.1
 
 # ── Embeddings (optional - skipped if install fails) ──
-sentence-transformers>=5.0.0
-faiss-cpu>=1.7.4
+#sentence-transformers>=5.0.0
+#faiss-cpu>=1.7.4
 
 # ── File Processing ───────────────────────────
 PyPDF2==3.0.1
