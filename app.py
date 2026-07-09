@@ -6,6 +6,7 @@ Fix: WebSocket 500 error suppressed (harmless Werkzeug conflict with SocketIO th
 
 import os
 import sys
+from datetime import timedelta
 
 # Load .env FIRST before any other imports
 from dotenv import load_dotenv
@@ -51,18 +52,47 @@ socketio = SocketIO(
 jwt = JWTManager()
 
 
+def _normalize_database_url(url: str) -> str:
+    """Render (and most managed Postgres providers) hand out connection
+    strings starting with 'postgres://', which SQLAlchemy 1.4+/2.0 no longer
+    accepts — it requires 'postgresql://'. This only touches Postgres URLs;
+    the local SQLite default (sqlite:///...) is returned unchanged."""
+    if url.startswith("postgres://"):
+        return url.replace("postgres://", "postgresql://", 1)
+    return url
+
+
 def create_app():
     app = Flask(__name__)
+
+    database_url = _normalize_database_url(os.getenv("DATABASE_URL", "sqlite:///ai_team_brain.db"))
+    is_postgres = database_url.startswith("postgresql://")
 
     app.config.update(
         SECRET_KEY                     = os.getenv("SECRET_KEY",    "atb-dev-secret-change-in-prod"),
         JWT_SECRET_KEY                 = os.getenv("JWT_SECRET_KEY","atb-jwt-secret-change-in-prod"),
-        SQLALCHEMY_DATABASE_URI        = os.getenv("DATABASE_URL",  "sqlite:///ai_team_brain.db"),
+        SQLALCHEMY_DATABASE_URI        = database_url,
         SQLALCHEMY_TRACK_MODIFICATIONS = False,
         UPLOAD_FOLDER                  = os.getenv("UPLOAD_FOLDER", "./uploads"),
         MAX_CONTENT_LENGTH             = int(os.getenv("MAX_CONTENT_LENGTH", 16_777_216)),
-        JWT_ACCESS_TOKEN_EXPIRES       = False,
+        # SECURITY FIX: access tokens used to never expire (JWT_ACCESS_TOKEN_EXPIRES
+        # was False), so a single leaked token was valid forever with no way to
+        # revoke it. Short-lived access tokens + a longer-lived refresh token
+        # (see /api/auth/refresh) mean a leaked access token is only useful for
+        # a limited window, while the frontend silently refreshes it in the
+        # background so the user is never interrupted during normal use.
+        JWT_ACCESS_TOKEN_EXPIRES       = timedelta(minutes=int(os.getenv("JWT_ACCESS_TOKEN_EXPIRES_MIN", 30))),
+        JWT_REFRESH_TOKEN_EXPIRES      = timedelta(days=int(os.getenv("JWT_REFRESH_TOKEN_EXPIRES_DAYS", 30))),
     )
+
+    if is_postgres:
+        # pool_pre_ping: managed Postgres providers (Render included) can
+        # silently drop idle connections; this checks a connection is alive
+        # before using it instead of surfacing a random request failure.
+        app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {"pool_pre_ping": True}
+        logger.info("Database: PostgreSQL")
+    else:
+        logger.info("Database: SQLite (local file — not suitable for production, see DATABASE_URL)")
 
     for d in [app.config["UPLOAD_FOLDER"], "logs", "vector_store"]:
         os.makedirs(d, exist_ok=True)

@@ -89,8 +89,8 @@ class TeamMember(db.Model):
     __tablename__ = "team_members"
 
     id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
-    team_id = db.Column(db.String(36), db.ForeignKey("teams.id"), nullable=False)
-    user_id = db.Column(db.String(36), db.ForeignKey("users.id"), nullable=False)
+    team_id = db.Column(db.String(36), db.ForeignKey("teams.id"), nullable=False, index=True)
+    user_id = db.Column(db.String(36), db.ForeignKey("users.id"), nullable=False, index=True)
     role = db.Column(db.String(20), default="member")
     joined_at = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -116,9 +116,9 @@ class Task(db.Model):
     __tablename__ = "tasks"
 
     id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
-    team_id = db.Column(db.String(36), db.ForeignKey("teams.id"), nullable=False)
-    creator_id = db.Column(db.String(36), db.ForeignKey("users.id"))
-    assignee_id = db.Column(db.String(36), db.ForeignKey("users.id"))
+    team_id = db.Column(db.String(36), db.ForeignKey("teams.id"), nullable=False, index=True)
+    creator_id = db.Column(db.String(36), db.ForeignKey("users.id"), index=True)
+    assignee_id = db.Column(db.String(36), db.ForeignKey("users.id"), index=True)
     title = db.Column(db.String(500), nullable=False)
     description = db.Column(db.Text)
     status = db.Column(db.String(20), default="pending")
@@ -168,7 +168,7 @@ class ChatRoom(db.Model):
     __tablename__ = "chat_rooms"
 
     id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
-    team_id = db.Column(db.String(36), db.ForeignKey("teams.id"), nullable=False)
+    team_id = db.Column(db.String(36), db.ForeignKey("teams.id"), nullable=False, index=True)
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text)
     room_type = db.Column(db.String(20), default="general")
@@ -194,8 +194,8 @@ class ChatMessage(db.Model):
     __tablename__ = "chat_messages"
 
     id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
-    room_id = db.Column(db.String(36), db.ForeignKey("chat_rooms.id"), nullable=False)
-    user_id = db.Column(db.String(36), db.ForeignKey("users.id"), nullable=False)
+    room_id = db.Column(db.String(36), db.ForeignKey("chat_rooms.id"), nullable=False, index=True)
+    user_id = db.Column(db.String(36), db.ForeignKey("users.id"), nullable=False, index=True)
     content = db.Column(db.Text, nullable=False)
     message_type = db.Column(db.String(20), default="text")
     extra_data = db.Column(db.Text)  # renamed from 'metadata' (reserved word)
@@ -226,7 +226,7 @@ class KnowledgeItem(db.Model):
     __tablename__ = "knowledge_items"
 
     id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
-    team_id = db.Column(db.String(36), db.ForeignKey("teams.id"), nullable=False)
+    team_id = db.Column(db.String(36), db.ForeignKey("teams.id"), nullable=False, index=True)
     uploaded_by = db.Column(db.String(36), db.ForeignKey("users.id"))
     title = db.Column(db.String(500), nullable=False)
     content = db.Column(db.Text)
@@ -268,8 +268,8 @@ class ActivityLog(db.Model):
     __tablename__ = "activity_logs"
 
     id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
-    team_id = db.Column(db.String(36), db.ForeignKey("teams.id"))
-    user_id = db.Column(db.String(36), db.ForeignKey("users.id"))
+    team_id = db.Column(db.String(36), db.ForeignKey("teams.id"), index=True)
+    user_id = db.Column(db.String(36), db.ForeignKey("users.id"), index=True)
     action = db.Column(db.String(100), nullable=False)
     entity_type = db.Column(db.String(50))
     entity_id = db.Column(db.String(36))
@@ -299,8 +299,8 @@ class Notification(db.Model):
     __tablename__ = "notifications"
 
     id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
-    user_id = db.Column(db.String(36), db.ForeignKey("users.id"), nullable=False)
-    team_id = db.Column(db.String(36), db.ForeignKey("teams.id"))
+    user_id = db.Column(db.String(36), db.ForeignKey("users.id"), nullable=False, index=True)
+    team_id = db.Column(db.String(36), db.ForeignKey("teams.id"), index=True)
     title = db.Column(db.String(200), nullable=False)
     message = db.Column(db.Text)
     notification_type = db.Column(db.String(50))
@@ -326,7 +326,7 @@ class DailySummary(db.Model):
     __tablename__ = "daily_summaries"
 
     id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
-    team_id = db.Column(db.String(36), db.ForeignKey("teams.id"), nullable=False)
+    team_id = db.Column(db.String(36), db.ForeignKey("teams.id"), nullable=False, index=True)
     summary_date = db.Column(db.Date, nullable=False)
     content = db.Column(db.Text)
     stats = db.Column(db.Text)

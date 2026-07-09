@@ -8,7 +8,7 @@ import random
 import string
 from datetime import datetime
 from flask import Blueprint, request, jsonify, g
-from flask_jwt_extended import create_access_token
+from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, get_jwt_identity
 from loguru import logger
 from models.database import db, User, Team, TeamMember, ActivityLog, ChatRoom, Task, KnowledgeItem, Notification, ChatMessage, DailySummary
 from utils.auth_middleware import require_auth, verify_firebase_token
@@ -40,16 +40,26 @@ def firebase_login():
         avatar_url   = decoded.get("picture", "")
         logger.info(f"Firebase auth OK: {email}")
     except Exception as firebase_err:
-        # Dev mode fallback
-        is_dev  = os.getenv("FLASK_ENV", "development") == "development"
-        is_mock = id_token.startswith("mock_")
-        if is_dev or is_mock:
+        # Dev mode fallback — reachable ONLY when the server itself is running
+        # in development mode (FLASK_ENV=development, the local default).
+        #
+        # SECURITY FIX: this used to also accept any client-supplied idToken
+        # starting with "mock_", regardless of FLASK_ENV. That meant anyone,
+        # in any environment including production, could authenticate as an
+        # arbitrary email address just by sending {"idToken": "mock_x", ...}
+        # with no real credentials. The client can no longer opt itself into
+        # the dev-mode fallback — only the server's own environment can.
+        is_dev = os.getenv("FLASK_ENV", "development") == "development"
+        if is_dev:
             if not email:
                 return jsonify({"error": "Email required"}), 400
             firebase_uid = f"dev_{email.replace('@','_').replace('.','_')}"
             display_name = display_name or email.split("@")[0]
             logger.warning(f"Dev-mode login: {email}")
         else:
+            logger.warning(
+                f"Rejected unverifiable Firebase token outside dev mode: {firebase_err}"
+            )
             return jsonify({"error": "Invalid Firebase token"}), 401
 
     # Upsert user
@@ -70,8 +80,29 @@ def firebase_login():
             user.avatar_url = avatar_url
 
     db.session.commit()
-    access_token = create_access_token(identity=user.id)
-    return jsonify({"accessToken": access_token, "user": user.to_dict()})
+    access_token  = create_access_token(identity=user.id)
+    refresh_token = create_refresh_token(identity=user.id)
+    return jsonify({"accessToken": access_token, "refreshToken": refresh_token, "user": user.to_dict()})
+
+
+# ── Token refresh ───────────────────────────────────────────────
+# Access tokens are short-lived (see app.py JWT_ACCESS_TOKEN_EXPIRES). This
+# endpoint lets the frontend silently exchange a still-valid refresh token
+# for a new access token instead of forcing the user to log in again every
+# time the access token expires. Requires a REFRESH token specifically
+# (jwt_required(refresh=True)) — an access token cannot be used here, and
+# a refresh token cannot be used on any other endpoint (require_auth calls
+# verify_jwt_in_request() with its default refresh=False).
+
+@auth_bp.route("/refresh", methods=["POST"])
+@jwt_required(refresh=True)
+def refresh():
+    user_id = get_jwt_identity()
+    user = User.query.get(user_id)
+    if not user or not user.is_active:
+        return jsonify({"error": "User not found or inactive"}), 401
+    new_access_token = create_access_token(identity=user_id)
+    return jsonify({"accessToken": new_access_token})
 
 
 # ── Profile ───────────────────────────────────────────────────

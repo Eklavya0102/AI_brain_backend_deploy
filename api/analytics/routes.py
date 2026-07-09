@@ -4,7 +4,7 @@ AI Team Brain - Analytics Routes
 
 from datetime import datetime, timedelta
 from flask import Blueprint, request, jsonify, g
-from models.database import db, Task, ActivityLog, ChatMessage, KnowledgeItem, TeamMember, DailySummary
+from models.database import db, Task, ActivityLog, ChatMessage, ChatRoom, KnowledgeItem, TeamMember, DailySummary
 from utils.auth_middleware import require_auth
 from loguru import logger
 
@@ -158,7 +158,10 @@ def generate_daily_summary(team_id):
 
     msgs_today = ChatMessage.query.join(
         ChatMessage.room
-    ).filter(ChatMessage.created_at >= today_start).count()
+    ).filter(
+        ChatRoom.team_id == team_id,
+        ChatMessage.created_at >= today_start,
+    ).count()
 
     files_today = KnowledgeItem.query.filter(
         KnowledgeItem.team_id == team_id,

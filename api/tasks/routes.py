@@ -23,6 +23,15 @@ def _is_owner(team_id, user_id):
     return TeamMember.query.filter_by(team_id=team_id, user_id=user_id, role="owner").first()
 
 
+def _is_valid_assignee(team_id, assignee_id):
+    """BUG FIX: assigneeId used to be accepted with no check at all, so a
+    task could be assigned to a user_id that isn't even on the team. An
+    empty/None assignee (unassigned task) is always valid."""
+    if not assignee_id:
+        return True
+    return TeamMember.query.filter_by(team_id=team_id, user_id=assignee_id).first() is not None
+
+
 def _emit_socket(event: str, data: dict, room: str):
     """Emit a socket event to a room."""
     try:
@@ -71,6 +80,11 @@ def create_task(team_id):
         return jsonify({"error": "Access denied"}), 403
 
     data     = request.get_json() or {}
+
+    assignee_id = data.get("assigneeId")
+    if not _is_valid_assignee(team_id, assignee_id):
+        return jsonify({"error": "Assignee must be a member of this team"}), 400
+
     deadline = None
     if data.get("deadline"):
         try:
@@ -81,7 +95,7 @@ def create_task(team_id):
     task = Task(
         team_id=team_id,
         creator_id=g.current_user.id,
-        assignee_id=data.get("assigneeId"),
+        assignee_id=assignee_id,
         title=data.get("title", "Untitled task"),
         description=data.get("description", ""),
         status=data.get("status", "pending"),
@@ -164,7 +178,11 @@ def update_task(team_id, task_id):
         if "title"       in data: task.title       = data["title"]
         if "description" in data: task.description = data["description"]
         if "priority"    in data: task.priority    = data["priority"]
-        if "assigneeId"  in data: task.assignee_id = data["assigneeId"]
+        if "assigneeId"  in data:
+            new_assignee_id = data["assigneeId"]
+            if not _is_valid_assignee(team_id, new_assignee_id):
+                return jsonify({"error": "Assignee must be a member of this team"}), 400
+            task.assignee_id = new_assignee_id
         if "deadline"    in data:
             try:
                 task.deadline = datetime.fromisoformat(data["deadline"].replace("Z", "+00:00"))

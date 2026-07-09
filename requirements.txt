@@ -8,6 +8,7 @@ flask-sqlalchemy==3.1.1
 # ── Database ──────────────────────────────────
 sqlalchemy==2.0.23
 alembic==1.13.0
+psycopg2-binary==2.9.9
 
 # ── AI APIs ───────────────────────────────────
 groq==0.4.2
@@ -15,7 +16,7 @@ google-generativeai==0.3.2
 openai==1.6.1
 
 # ── Embeddings (optional - skipped if install fails) ──
-sentence-transformers==2.2.2
+sentence-transformers>=5.0.0
 faiss-cpu>=1.7.4
 
 # ── File Processing ───────────────────────────
